@@ -102,12 +102,14 @@ export type Database = {
           created_at: string
           currency: string | null
           current_location: string | null
+          customs_hold: boolean | null
           delivery_days: number | null
           destination_location: string
           estimated_delivery: string | null
           id: string
           origin_location: string
           package_description: string | null
+          package_images: string[] | null
           package_value: number | null
           recipient_address: string | null
           recipient_country: string | null
@@ -128,12 +130,14 @@ export type Database = {
           created_at?: string
           currency?: string | null
           current_location?: string | null
+          customs_hold?: boolean | null
           delivery_days?: number | null
           destination_location: string
           estimated_delivery?: string | null
           id?: string
           origin_location: string
           package_description?: string | null
+          package_images?: string[] | null
           package_value?: number | null
           recipient_address?: string | null
           recipient_country?: string | null
@@ -154,12 +158,14 @@ export type Database = {
           created_at?: string
           currency?: string | null
           current_location?: string | null
+          customs_hold?: boolean | null
           delivery_days?: number | null
           destination_location?: string
           estimated_delivery?: string | null
           id?: string
           origin_location?: string
           package_description?: string | null
+          package_images?: string[] | null
           package_value?: number | null
           recipient_address?: string | null
           recipient_country?: string | null

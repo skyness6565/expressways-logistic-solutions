@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Package, Save, Plus, Trash2, MapPin, Clock } from "lucide-react";
+import { ArrowLeft, Package, Save, Plus, Trash2, MapPin, Clock, Upload, X, ImageIcon, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAdmin } from "@/contexts/AdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,12 +37,16 @@ const statusOptions = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+const currencies = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY"];
+
 const EditShipment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [packageImages, setPackageImages] = useState<string[]>([]);
 
   const [shipment, setShipment] = useState({
     tracking_number: "",
@@ -65,6 +70,7 @@ const EditShipment = () => {
     delivery_days: "",
     service_type: "standard",
     estimated_delivery: "",
+    customs_hold: false,
   });
 
   const [events, setEvents] = useState<ShipmentEvent[]>([]);
@@ -116,7 +122,10 @@ const EditShipment = () => {
       delivery_days: shipmentData.delivery_days?.toString() || "",
       service_type: shipmentData.service_type,
       estimated_delivery: shipmentData.estimated_delivery || "",
+      customs_hold: shipmentData.customs_hold || false,
     });
+
+    setPackageImages(shipmentData.package_images || []);
 
     // Fetch events
     const { data: eventsData } = await supabase
@@ -138,7 +147,7 @@ const EditShipment = () => {
     setIsLoading(false);
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | boolean) => {
     setShipment((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -166,6 +175,46 @@ const EditShipment = () => {
       await supabase.from("shipment_events").delete().eq("id", event.id);
     }
     setEvents((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `packages/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('package-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast.error(`Failed to upload ${file.name}`);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('package-images')
+        .getPublicUrl(filePath);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    setPackageImages((prev) => [...prev, ...uploadedUrls]);
+    setUploadingImages(false);
+    
+    if (uploadedUrls.length > 0) {
+      toast.success(`${uploadedUrls.length} image(s) uploaded`);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setPackageImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -196,6 +245,8 @@ const EditShipment = () => {
         delivery_days: shipment.delivery_days ? parseInt(shipment.delivery_days) : null,
         service_type: shipment.service_type,
         estimated_delivery: shipment.estimated_delivery || null,
+        customs_hold: shipment.customs_hold,
+        package_images: packageImages.length > 0 ? packageImages : null,
       })
       .eq("id", id);
 
@@ -335,6 +386,35 @@ const EditShipment = () => {
             </CardContent>
           </Card>
 
+          {/* Customs Hold Toggle */}
+          <Card className="bg-card border-border border-red-500/20">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Customs Settings</CardTitle>
+                  <CardDescription>Enable customs hold warning</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-lg border border-red-500/20">
+                <div className="space-y-1">
+                  <p className="font-medium text-foreground">Customs Hold</p>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, displays a warning that the package has been seized by customs
+                  </p>
+                </div>
+                <Switch
+                  checked={shipment.customs_hold}
+                  onCheckedChange={(checked) => handleChange("customs_hold", checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Tracking Events */}
           <Card className="bg-card border-border">
             <CardHeader>
@@ -418,6 +498,79 @@ const EditShipment = () => {
             </CardContent>
           </Card>
 
+          {/* Package Images */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <ImageIcon className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Package Images</CardTitle>
+                  <CardDescription>Upload photos or videos of the package</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Upload Area */}
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-accent transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="package-images"
+                    disabled={uploadingImages}
+                  />
+                  <label htmlFor="package-images" className="cursor-pointer">
+                    <div className="flex flex-col items-center">
+                      {uploadingImages ? (
+                        <>
+                          <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin mb-3" />
+                          <p className="text-sm text-muted-foreground">Uploading...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-10 h-10 text-muted-foreground mb-3" />
+                          <p className="text-sm font-medium text-foreground">
+                            Click to upload images or videos
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            PNG, JPG, GIF, MP4 up to 10MB
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </div>
+
+                {/* Image Preview */}
+                {packageImages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {packageImages.map((image, index) => (
+                      <div key={index} className="relative aspect-square group">
+                        <img
+                          src={image}
+                          alt={`Package ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Package Details */}
           <Card className="bg-card border-border">
             <CardHeader>
@@ -476,7 +629,7 @@ const EditShipment = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY"].map((c) => (
+                    {currencies.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
                       </SelectItem>
@@ -484,16 +637,41 @@ const EditShipment = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>Service Type</Label>
+                <Select
+                  value={shipment.service_type}
+                  onValueChange={(value) => handleChange("service_type", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="express">Express</SelectItem>
+                    <SelectItem value="overnight">Overnight</SelectItem>
+                    <SelectItem value="freight">Freight</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => navigate("/admin/dashboard")}>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigate("/admin/dashboard")}
+            >
               Cancel
             </Button>
-            <Button type="submit" variant="hero" disabled={isSaving}>
+            <Button type="submit" variant="hero" className="flex-1" disabled={isSaving}>
               {isSaving ? (
-                <div className="w-5 h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
