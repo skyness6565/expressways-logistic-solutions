@@ -87,13 +87,12 @@ const AdminLogin = () => {
             </Button>
           </form>
           <div className="mt-6 text-center">
-            <Button
-              variant="link"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => navigate("/")}
+            <a
+              href="/"
+              className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
             >
               Back to Home
-            </Button>
+            </a>
           </div>
         </CardContent>
       </Card>

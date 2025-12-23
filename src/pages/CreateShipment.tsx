@@ -61,7 +61,7 @@ const CreateShipment = () => {
   });
 
   if (!isAuthenticated) {
-    navigate("/admin");
+    navigate("/admin/auth");
     return null;
   }
 
