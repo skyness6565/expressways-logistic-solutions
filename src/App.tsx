@@ -22,7 +22,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/track/:trackingNumber" element={<TrackingPage />} />
-            <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/auth" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/shipments/new" element={<CreateShipment />} />
             <Route path="/admin/shipments/:id" element={<EditShipment />} />

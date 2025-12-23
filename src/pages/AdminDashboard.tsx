@@ -58,7 +58,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/admin");
+      navigate("/admin/auth");
       return;
     }
     fetchShipments();
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     logout();
     toast.success("Logged out successfully");
-    navigate("/admin");
+    navigate("/admin/auth");
   };
 
   const handleDelete = async (id: string) => {

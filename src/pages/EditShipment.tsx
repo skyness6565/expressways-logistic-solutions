@@ -77,7 +77,7 @@ const EditShipment = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/admin");
+      navigate("/admin/auth");
       return;
     }
     if (id) {
