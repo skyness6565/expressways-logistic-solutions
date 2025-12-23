@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Send, Package, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuoteModalProps {
   isOpen: boolean;
@@ -50,12 +51,34 @@ const QuoteModal = ({ isOpen, onClose }: QuoteModalProps) => {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const { error } = await supabase.from("quote_requests").insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        service_type: formData.serviceType,
+        origin: formData.origin || null,
+        destination: formData.destination || null,
+        weight_kg: formData.weight ? parseFloat(formData.weight) : null,
+        details: formData.details || null,
+      });
+
+      if (error) {
+        console.error("Error submitting quote:", error);
+        toast.error("Failed to submit quote. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      setIsSubmitted(true);
+      toast.success("Quote request submitted successfully!");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
 
     setIsLoading(false);
-    setIsSubmitted(true);
-    toast.success("Quote request submitted successfully!");
   };
 
   const handleClose = () => {

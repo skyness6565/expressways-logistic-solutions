@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import ServiceSection from "@/components/ServiceSection";
 import TrackingSection from "@/components/TrackingSection";
+import FAQSection from "@/components/FAQSection";
 import QuoteModal from "@/components/QuoteModal";
 import Footer from "@/components/Footer";
 import JivoChat from "@/components/JivoChat";
@@ -33,6 +34,8 @@ const Index = () => {
         <ServiceSection onQuoteClick={() => setIsQuoteModalOpen(true)} />
         
         <TrackingSection />
+        
+        <FAQSection />
       </main>
 
       <Footer />
