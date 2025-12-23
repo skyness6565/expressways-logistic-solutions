@@ -191,7 +191,7 @@ const FAQSection = () => {
             Still have questions? Our support team is here to help.
           </p>
           <a
-            href="mailto:support@expressways.com"
+            href="mailto:skynetworldwideexpress43@gmail.com"
             className="inline-flex items-center gap-2 text-accent font-medium hover:underline text-sm md:text-base"
           >
             Contact Support
