@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Package, Search, MapPin, Clock, CheckCircle2, Truck, AlertCircle } from "lucide-react";
+import { Package, Search, MapPin, Clock, CheckCircle2, Truck, AlertCircle, ExternalLink, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,6 +11,15 @@ interface TrackingResult {
   status: string;
   location: string;
   estimatedDelivery: string;
+  senderName: string | null;
+  recipientName: string | null;
+  origin: string;
+  destination: string;
+  packageDescription: string | null;
+  weight: number | null;
+  shippingFee: number | null;
+  currency: string | null;
+  customsHold: boolean;
   steps: {
     title: string;
     location: string;
@@ -19,6 +29,7 @@ interface TrackingResult {
 }
 
 const TrackingSection = () => {
+  const navigate = useNavigate();
   const [trackingNumber, setTrackingNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<TrackingResult | null>(null);
@@ -85,56 +96,21 @@ const TrackingSection = () => {
                 year: "numeric",
               })
             : "Calculating...",
+          senderName: shipment.sender_name,
+          recipientName: shipment.recipient_name,
+          origin: shipment.origin_location,
+          destination: shipment.destination_location,
+          packageDescription: shipment.package_description,
+          weight: shipment.weight_kg,
+          shippingFee: shipment.shipping_fee,
+          currency: shipment.currency,
+          customsHold: shipment.customs_hold || false,
           steps,
         });
         toast.success("Shipment found!");
       } else {
-        // Demo tracking result for testing
-        setResult({
-          trackingNumber: trackingNumber.toUpperCase(),
-          status: "In Transit",
-          location: "Los Angeles Distribution Center",
-          estimatedDelivery: "December 26, 2024",
-          steps: [
-            {
-              title: "Package Picked Up",
-              location: "Shanghai, China",
-              date: "Dec 20, 2024 - 10:30 AM",
-              completed: true,
-            },
-            {
-              title: "Departed Origin Port",
-              location: "Shanghai Port, China",
-              date: "Dec 21, 2024 - 2:15 PM",
-              completed: true,
-            },
-            {
-              title: "Arrived at Destination Port",
-              location: "Los Angeles Port, USA",
-              date: "Dec 23, 2024 - 8:45 AM",
-              completed: true,
-            },
-            {
-              title: "At Distribution Center",
-              location: "Los Angeles, CA",
-              date: "Dec 23, 2024 - 4:20 PM",
-              completed: true,
-            },
-            {
-              title: "Out for Delivery",
-              location: "Local Delivery Hub",
-              date: "Pending",
-              completed: false,
-            },
-            {
-              title: "Delivered",
-              location: "Customer Address",
-              date: "Pending",
-              completed: false,
-            },
-          ],
-        });
-        toast.success("Demo shipment data loaded!");
+        setNotFound(true);
+        toast.error("Shipment not found");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -142,6 +118,22 @@ const TrackingSection = () => {
     }
 
     setIsLoading(false);
+  };
+
+  const viewFullDetails = () => {
+    if (result) {
+      navigate(`/track/${result.trackingNumber}`);
+    }
+  };
+
+  const statusLabels: Record<string, string> = {
+    "processing": "Processing",
+    "picked-up": "Picked Up",
+    "in-transit": "In Transit",
+    "at-sorting-center": "At Sorting Center",
+    "customs-clearance": "Customs Clearance",
+    "out-for-delivery": "Out for Delivery",
+    "delivered": "Delivered",
   };
 
   return (
@@ -218,6 +210,23 @@ const TrackingSection = () => {
         {result && (
           <div className="max-w-4xl mx-auto animate-fade-in">
             <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+              {/* Customs Hold Warning */}
+              {result.customsHold && (
+                <div className="bg-red-500/10 border-b-2 border-red-500/50 p-4 md:p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-red-500 mb-1">⚠️ Customs Hold - Action Required</h3>
+                      <p className="text-red-400 text-sm">
+                        Your goods have been seized by customs. Contact support immediately to avoid losing your package.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Header */}
               <div className="bg-accent p-4 md:p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -225,9 +234,13 @@ const TrackingSection = () => {
                     <p className="text-accent-foreground/70 text-xs md:text-sm mb-1">Tracking Number</p>
                     <p className="text-lg md:text-xl font-bold text-accent-foreground">{result.trackingNumber}</p>
                   </div>
-                  <div className="flex items-center gap-3 px-3 md:px-4 py-2 rounded-full bg-accent-foreground/20">
+                  <div className={`flex items-center gap-3 px-3 md:px-4 py-2 rounded-full ${
+                    result.customsHold ? "bg-red-500/30" : "bg-accent-foreground/20"
+                  }`}>
                     <Truck className="w-4 h-4 md:w-5 md:h-5 text-accent-foreground" />
-                    <span className="font-semibold text-sm md:text-base text-accent-foreground">{result.status}</span>
+                    <span className="font-semibold text-sm md:text-base text-accent-foreground">
+                      {result.customsHold ? "Customs Hold" : statusLabels[result.status] || result.status}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -258,49 +271,101 @@ const TrackingSection = () => {
                   </div>
                   <div>
                     <p className="text-xs md:text-sm text-muted-foreground">Status</p>
-                    <p className="text-sm md:text-base font-semibold text-foreground">On Schedule</p>
+                    <p className="text-sm md:text-base font-semibold text-foreground">
+                      {result.customsHold ? "On Hold" : "On Schedule"}
+                    </p>
                   </div>
                 </div>
               </div>
 
+              {/* Package Details Summary */}
+              <div className="grid md:grid-cols-2 gap-4 md:gap-6 p-4 md:p-6 border-b border-border bg-muted/30">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-3">Route</h4>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">From:</span>
+                    <span className="font-medium text-foreground">{result.origin}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm mt-1">
+                    <span className="text-muted-foreground">To:</span>
+                    <span className="font-medium text-foreground">{result.destination}</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-3">Package Info</h4>
+                  {result.senderName && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Sender:</span>
+                      <span className="font-medium text-foreground">{result.senderName}</span>
+                    </div>
+                  )}
+                  {result.recipientName && (
+                    <div className="flex items-center gap-2 text-sm mt-1">
+                      <span className="text-muted-foreground">Recipient:</span>
+                      <span className="font-medium text-foreground">{result.recipientName}</span>
+                    </div>
+                  )}
+                  {result.weight && (
+                    <div className="flex items-center gap-2 text-sm mt-1">
+                      <span className="text-muted-foreground">Weight:</span>
+                      <span className="font-medium text-foreground">{result.weight} kg</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Timeline */}
-              <div className="p-4 md:p-6">
-                <h3 className="font-semibold text-foreground mb-4 md:mb-6 text-sm md:text-base">Shipment Progress</h3>
-                <div className="space-y-3 md:space-y-4">
-                  {result.steps.map((step, index) => (
-                    <div key={index} className="flex gap-3 md:gap-4">
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center ${
-                            step.completed
-                              ? "bg-accent text-accent-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {step.completed ? (
-                            <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
-                          ) : (
-                            <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />
+              {result.steps.length > 0 && (
+                <div className="p-4 md:p-6 border-b border-border">
+                  <h3 className="font-semibold text-foreground mb-4 md:mb-6 text-sm md:text-base">Shipment Progress</h3>
+                  <div className="space-y-3 md:space-y-4">
+                    {result.steps.slice(0, 4).map((step, index) => (
+                      <div key={index} className="flex gap-3 md:gap-4">
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center ${
+                              step.completed
+                                ? "bg-accent text-accent-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {step.completed ? (
+                              <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
+                            ) : (
+                              <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />
+                            )}
+                          </div>
+                          {index < Math.min(result.steps.length, 4) - 1 && (
+                            <div
+                              className={`w-0.5 flex-1 mt-2 ${
+                                step.completed ? "bg-accent" : "bg-muted"
+                              }`}
+                            />
                           )}
                         </div>
-                        {index < result.steps.length - 1 && (
-                          <div
-                            className={`w-0.5 flex-1 mt-2 ${
-                              step.completed ? "bg-accent" : "bg-muted"
-                            }`}
-                          />
-                        )}
+                        <div className="flex-1 pb-4 md:pb-6">
+                          <p className={`text-sm md:text-base font-medium ${step.completed ? "text-foreground" : "text-muted-foreground"}`}>
+                            {step.title}
+                          </p>
+                          <p className="text-xs md:text-sm text-muted-foreground">{step.location}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">{step.date}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 pb-4 md:pb-6">
-                        <p className={`text-sm md:text-base font-medium ${step.completed ? "text-foreground" : "text-muted-foreground"}`}>
-                          {step.title}
-                        </p>
-                        <p className="text-xs md:text-sm text-muted-foreground">{step.location}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground">{step.date}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              {/* View Full Details Button */}
+              <div className="p-4 md:p-6 bg-muted/20">
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={viewFullDetails}
+                >
+                  <span>View Full Details</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             </div>
           </div>
