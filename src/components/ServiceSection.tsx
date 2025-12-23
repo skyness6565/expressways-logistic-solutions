@@ -100,7 +100,7 @@ const ServiceSection = ({ onQuoteClick }: ServiceSectionProps) => {
             ref={(el) => {
               if (el) sectionRefs.current.set(service.id, el);
             }}
-            className="relative min-h-screen flex items-center overflow-hidden"
+            className="relative min-h-[70vh] md:min-h-[80vh] lg:min-h-screen flex items-center overflow-hidden"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -130,26 +130,26 @@ const ServiceSection = ({ onQuoteClick }: ServiceSectionProps) => {
                       <span className="text-sm font-medium">{service.subtitle}</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-primary-foreground mb-6">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-primary-foreground mb-4 md:mb-6">
                       {service.title}
                     </h2>
 
-                    <p className="text-lg text-primary-foreground/80 mb-8 max-w-xl">
+                    <p className="text-base md:text-lg text-primary-foreground/80 mb-6 max-w-xl">
                       {service.description}
                     </p>
 
-                    <ul className="flex flex-wrap gap-3 mb-8">
+                    <ul className="flex flex-wrap gap-2 md:gap-3 mb-6">
                       {service.features.map((feature) => (
                         <li
                           key={feature}
-                          className="px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm text-primary-foreground text-sm font-medium"
+                          className="px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm text-primary-foreground text-xs md:text-sm font-medium"
                         >
                           {feature}
                         </li>
                       ))}
                     </ul>
 
-                    <Button variant="hero" size="xl" onClick={onQuoteClick}>
+                    <Button variant="hero" size="lg" className="md:text-base" onClick={onQuoteClick}>
                       Get {service.title} Quote
                       <ArrowRight className="w-5 h-5" />
                     </Button>

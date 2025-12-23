@@ -84,7 +84,7 @@ const TrackingSection = () => {
   };
 
   return (
-    <section id="tracking" className="relative bg-navy py-24 overflow-hidden">
+    <section id="tracking" className="relative bg-navy py-12 md:py-20 lg:py-24 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -93,48 +93,49 @@ const TrackingSection = () => {
       </div>
 
       <div className="container-wide section-padding relative z-10">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent mb-6">
-            <Package className="w-4 h-4" />
-            <span className="text-sm font-medium">Real-Time Tracking</span>
+        <div className="text-center mb-8 md:mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-accent/20 text-accent mb-4 md:mb-6">
+            <Package className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="text-xs md:text-sm font-medium">Real-Time Tracking</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-display font-bold text-primary-foreground mb-4">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-primary-foreground mb-3 md:mb-4">
             Track Your Shipment
           </h2>
-          <p className="text-lg text-primary-foreground/70 max-w-2xl mx-auto">
+          <p className="text-sm md:text-base lg:text-lg text-primary-foreground/70 max-w-2xl mx-auto px-4">
             Enter your tracking number below to get real-time updates on your shipment's location and estimated delivery time.
           </p>
         </div>
 
         {/* Tracking Form */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="max-w-2xl mx-auto mb-8 md:mb-12">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Enter your tracking number (e.g., EXP123456789)"
+                placeholder="Enter tracking number"
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-                className="pl-12 h-14 text-lg bg-card border-border"
+                className="pl-10 md:pl-12 h-12 md:h-14 text-sm md:text-base bg-card border-border"
               />
             </div>
             <Button
               variant="hero"
-              size="xl"
+              size="lg"
+              className="h-12 md:h-14 px-6 md:px-8"
               onClick={handleTrack}
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                  Tracking...
+                  <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
+                  <span className="text-sm md:text-base">Tracking...</span>
                 </>
               ) : (
                 <>
-                  <Package className="w-5 h-5" />
-                  Track Now
+                  <Package className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="text-sm md:text-base">Track Now</span>
                 </>
               )}
             </Button>
