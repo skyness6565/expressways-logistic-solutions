@@ -15,6 +15,14 @@ import {
   Home,
   Box,
   PackageCheck,
+  AlertTriangle,
+  Weight,
+  Mail,
+  User,
+  Calendar,
+  DollarSign,
+  FileText,
+  ImageIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,7 +34,11 @@ interface ShipmentData {
   current_location: string | null;
   estimated_delivery: string | null;
   sender_name: string | null;
+  sender_email: string | null;
+  sender_address: string | null;
+  sender_country: string | null;
   recipient_name: string | null;
+  recipient_email: string | null;
   recipient_address: string | null;
   recipient_country: string | null;
   package_description: string | null;
@@ -34,6 +46,11 @@ interface ShipmentData {
   shipping_fee: number | null;
   currency: string | null;
   service_type: string;
+  package_value: number | null;
+  delivery_days: number | null;
+  created_at: string;
+  customs_hold: boolean | null;
+  package_images: string[] | null;
 }
 
 interface TrackingEvent {
@@ -81,6 +98,7 @@ const TrackingPage = () => {
   const [shipment, setShipment] = useState<ShipmentData | null>(null);
   const [events, setEvents] = useState<TrackingEvent[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (trackingNumber) {
@@ -104,7 +122,7 @@ const TrackingPage = () => {
       return;
     }
 
-    setShipment(shipmentData);
+    setShipment(shipmentData as ShipmentData);
 
     // Fetch events
     const { data: eventsData } = await supabase
@@ -126,8 +144,16 @@ const TrackingPage = () => {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-primary-foreground/70">Loading shipment details...</p>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            {/* Animated truck */}
+            <div className="absolute inset-0 flex items-center justify-center animate-bounce">
+              <Truck className="w-10 h-10 text-accent" />
+            </div>
+            {/* Pulsing ring */}
+            <div className="absolute inset-0 rounded-full border-4 border-accent/30 animate-ping" />
+            <div className="absolute inset-2 rounded-full border-2 border-accent/50 animate-pulse" />
+          </div>
+          <p className="text-primary-foreground/70 animate-pulse">Loading shipment details...</p>
         </div>
       </div>
     );
@@ -136,8 +162,8 @@ const TrackingPage = () => {
   if (notFound) {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-muted/10 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="text-center max-w-md animate-fade-in">
+          <div className="w-20 h-20 bg-muted/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
             <AlertCircle className="w-10 h-10 text-muted-foreground" />
           </div>
           <h1 className="text-2xl font-display font-bold text-primary-foreground mb-2">
@@ -178,11 +204,44 @@ const TrackingPage = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Customs Hold Warning */}
+        {shipment?.customs_hold && (
+          <div className="mb-6 animate-fade-in">
+            <div className="bg-red-500/10 border-2 border-red-500/50 rounded-xl p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -translate-y-1/2 translate-x-1/2 animate-pulse" />
+              <div className="relative z-10 flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-display font-bold text-red-500 mb-2">
+                    ⚠️ Customs Hold - Action Required
+                  </h2>
+                  <p className="text-red-400 text-sm leading-relaxed">
+                    Your goods have been seized by customs. To avoid losing your package, please contact our support team immediately or send an email to{" "}
+                    <a href="mailto:support@globalxlogistics.com" className="font-bold underline hover:text-red-300 transition-colors">
+                      support@globalxlogistics.com
+                    </a>
+                    . Failure to respond within 48 hours may result in permanent confiscation of your shipment.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero Card */}
-        <div className="bg-gradient-to-br from-accent to-orange-glow rounded-2xl p-6 md:p-8 mb-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-accent to-orange-glow rounded-2xl p-6 md:p-8 mb-8 relative overflow-hidden animate-fade-in">
           <div className="absolute inset-0 opacity-50" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }} />
+          
+          {/* Animated truck moving across */}
+          <div className="absolute bottom-4 left-0 right-0 overflow-hidden pointer-events-none">
+            <div className="animate-truck-move">
+              <Truck className="w-8 h-8 text-accent-foreground/20" />
+            </div>
+          </div>
           
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -192,10 +251,21 @@ const TrackingPage = () => {
                   {shipment?.tracking_number}
                 </h1>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2 bg-accent-foreground/20 rounded-full backdrop-blur-sm">
-                {statusIcons[shipment?.status || "processing"]}
+              <div className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                shipment?.customs_hold 
+                  ? "bg-red-500/30 ring-2 ring-red-500/50" 
+                  : "bg-accent-foreground/20"
+              }`}>
+                {shipment?.customs_hold ? (
+                  <AlertTriangle className="w-5 h-5 text-red-200 animate-pulse" />
+                ) : (
+                  <div className="relative">
+                    {statusIcons[shipment?.status || "processing"]}
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping" />
+                  </div>
+                )}
                 <span className="font-semibold text-accent-foreground">
-                  {statusLabels[shipment?.status || "processing"]}
+                  {shipment?.customs_hold ? "Customs Hold" : statusLabels[shipment?.status || "processing"]}
                 </span>
               </div>
             </div>
@@ -206,21 +276,27 @@ const TrackingPage = () => {
                 {allStatuses.map((status, index) => (
                   <div
                     key={status}
-                    className={`flex-1 flex flex-col items-center ${
+                    className={`flex-1 flex flex-col items-center transition-all duration-500 ${
                       index <= currentStatusIndex ? "text-accent-foreground" : "text-accent-foreground/40"
                     }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div
-                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-500 ${
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-500 transform ${
                         index < currentStatusIndex
-                          ? "bg-accent-foreground text-accent"
+                          ? "bg-accent-foreground text-accent scale-100"
                           : index === currentStatusIndex
-                          ? "bg-accent-foreground text-accent ring-4 ring-accent-foreground/30 animate-pulse"
-                          : "bg-accent-foreground/20"
+                          ? "bg-accent-foreground text-accent ring-4 ring-accent-foreground/30 scale-110"
+                          : "bg-accent-foreground/20 scale-90"
                       }`}
                     >
                       {index < currentStatusIndex ? (
                         <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
+                      ) : index === currentStatusIndex ? (
+                        <div className="relative">
+                          {statusIcons[status]}
+                          <span className="absolute inset-0 rounded-full animate-ping bg-accent-foreground/30" />
+                        </div>
                       ) : (
                         statusIcons[status]
                       )}
@@ -233,9 +309,11 @@ const TrackingPage = () => {
               </div>
               <div className="h-2 bg-accent-foreground/20 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-accent-foreground rounded-full transition-all duration-700 ease-out"
+                  className="h-full bg-accent-foreground rounded-full transition-all duration-1000 ease-out relative"
                   style={{ width: `${((currentStatusIndex + 1) / allStatuses.length) * 100}%` }}
-                />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                </div>
               </div>
             </div>
           </div>
@@ -246,10 +324,11 @@ const TrackingPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Info Cards */}
             <div className="grid sm:grid-cols-3 gap-4">
-              <div className="bg-card rounded-xl p-4 border border-border">
+              <div className="bg-card rounded-xl p-4 border border-border transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-accent/10">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center relative">
                     <MapPin className="w-4 h-4 text-accent" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-pulse" />
                   </div>
                   <span className="text-xs text-muted-foreground">Current Location</span>
                 </div>
@@ -257,10 +336,10 @@ const TrackingPage = () => {
                   {shipment?.current_location || shipment?.origin_location}
                 </p>
               </div>
-              <div className="bg-card rounded-xl p-4 border border-border">
+              <div className="bg-card rounded-xl p-4 border border-border transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-green-500" />
+                    <Calendar className="w-4 h-4 text-green-500" />
                   </div>
                   <span className="text-xs text-muted-foreground">Est. Delivery</span>
                 </div>
@@ -274,7 +353,7 @@ const TrackingPage = () => {
                     : "Calculating..."}
                 </p>
               </div>
-              <div className="bg-card rounded-xl p-4 border border-border">
+              <div className="bg-card rounded-xl p-4 border border-border transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center">
                     <Truck className="w-4 h-4 text-purple-500" />
@@ -287,8 +366,36 @@ const TrackingPage = () => {
               </div>
             </div>
 
+            {/* Package Images */}
+            {shipment?.package_images && shipment.package_images.length > 0 && (
+              <div className="bg-card rounded-xl border border-border p-6 animate-fade-in">
+                <h2 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-accent" />
+                  Package Images
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {shipment.package_images.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group"
+                      onClick={() => setSelectedImage(image)}
+                    >
+                      <img
+                        src={image}
+                        alt={`Package image ${index + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-sm">View</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Timeline */}
-            <div className="bg-card rounded-xl border border-border p-6">
+            <div className="bg-card rounded-xl border border-border p-6 animate-fade-in">
               <h2 className="text-lg font-display font-bold text-foreground mb-6 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-accent" />
                 Tracking History
@@ -302,14 +409,15 @@ const TrackingPage = () => {
                   {events.map((event, index) => (
                     <div
                       key={event.id}
-                      className={`relative flex gap-4 pb-6 ${
+                      className={`relative flex gap-4 pb-6 animate-fade-in ${
                         index === events.length - 1 ? "pb-0" : ""
                       }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       {/* Timeline line */}
                       {index < events.length - 1 && (
                         <div
-                          className={`absolute left-4 top-8 w-0.5 h-[calc(100%-8px)] ${
+                          className={`absolute left-4 top-8 w-0.5 h-[calc(100%-8px)] transition-all duration-500 ${
                             event.completed ? "bg-accent" : "bg-muted"
                           }`}
                         />
@@ -317,11 +425,11 @@ const TrackingPage = () => {
 
                       {/* Icon */}
                       <div
-                        className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
                           event.completed
                             ? "bg-accent text-accent-foreground"
                             : "bg-muted text-muted-foreground"
-                        } ${index === 0 && event.completed ? "ring-4 ring-accent/20" : ""}`}
+                        } ${index === 0 && event.completed ? "ring-4 ring-accent/20 animate-pulse" : ""}`}
                       >
                         {event.completed ? (
                           <CheckCircle2 className="w-4 h-4" />
@@ -331,7 +439,7 @@ const TrackingPage = () => {
                       </div>
 
                       {/* Content */}
-                      <div className="flex-1">
+                      <div className="flex-1 transform hover:translate-x-2 transition-transform duration-300">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                           <p
                             className={`font-medium ${
@@ -365,10 +473,10 @@ const TrackingPage = () => {
           {/* Right Column - Package Info */}
           <div className="space-y-6">
             {/* Route */}
-            <div className="bg-card rounded-xl border border-border p-6">
+            <div className="bg-card rounded-xl border border-border p-6 animate-fade-in">
               <h3 className="font-semibold text-foreground mb-4">Route</h3>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 transform hover:translate-x-2 transition-transform duration-300">
                   <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Package className="w-4 h-4 text-green-500" />
                   </div>
@@ -377,8 +485,12 @@ const TrackingPage = () => {
                     <p className="font-medium text-foreground">{shipment?.origin_location}</p>
                   </div>
                 </div>
-                <div className="ml-4 border-l-2 border-dashed border-muted h-8" />
-                <div className="flex items-start gap-3">
+                <div className="ml-4 border-l-2 border-dashed border-muted h-8 relative">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <Truck className="w-4 h-4 text-accent animate-bounce" />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 transform hover:translate-x-2 transition-transform duration-300">
                   <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-4 h-4 text-accent" />
                   </div>
@@ -390,12 +502,46 @@ const TrackingPage = () => {
               </div>
             </div>
 
+            {/* Sender Info */}
+            {shipment?.sender_name && (
+              <div className="bg-card rounded-xl border border-border p-6 animate-fade-in">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  Sender
+                </h3>
+                <div className="space-y-2">
+                  <p className="font-medium text-foreground">{shipment.sender_name}</p>
+                  {shipment.sender_email && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Mail className="w-3 h-3" />
+                      {shipment.sender_email}
+                    </p>
+                  )}
+                  {shipment.sender_address && (
+                    <p className="text-sm text-muted-foreground">{shipment.sender_address}</p>
+                  )}
+                  {shipment.sender_country && (
+                    <p className="text-sm text-muted-foreground">{shipment.sender_country}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Recipient */}
             {shipment?.recipient_name && (
-              <div className="bg-card rounded-xl border border-border p-6">
-                <h3 className="font-semibold text-foreground mb-4">Recipient</h3>
+              <div className="bg-card rounded-xl border border-border p-6 animate-fade-in">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  Recipient
+                </h3>
                 <div className="space-y-2">
                   <p className="font-medium text-foreground">{shipment.recipient_name}</p>
+                  {shipment.recipient_email && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Mail className="w-3 h-3" />
+                      {shipment.recipient_email}
+                    </p>
+                  )}
                   {shipment.recipient_address && (
                     <p className="text-sm text-muted-foreground">{shipment.recipient_address}</p>
                   )}
@@ -407,28 +553,74 @@ const TrackingPage = () => {
             )}
 
             {/* Package Details */}
-            <div className="bg-card rounded-xl border border-border p-6">
-              <h3 className="font-semibold text-foreground mb-4">Package Details</h3>
+            <div className="bg-card rounded-xl border border-border p-6 animate-fade-in">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Package className="w-4 h-4 text-muted-foreground" />
+                Package Details
+              </h3>
               <div className="space-y-3">
                 {shipment?.package_description && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Description</p>
-                    <p className="text-sm text-foreground">{shipment.package_description}</p>
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Description</p>
+                      <p className="text-sm text-foreground">{shipment.package_description}</p>
+                    </div>
                   </div>
                 )}
                 {shipment?.weight_kg && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Weight</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Weight className="w-4 h-4" />
+                      Weight
+                    </span>
                     <span className="text-sm font-medium text-foreground">
                       {shipment.weight_kg} kg
                     </span>
                   </div>
                 )}
+                {shipment?.package_value && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      Value
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {shipment.currency} {shipment.package_value.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 {shipment?.shipping_fee && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Shipping Fee</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Truck className="w-4 h-4" />
+                      Shipping Fee
+                    </span>
                     <span className="text-sm font-medium text-foreground">
                       {shipment.currency} {shipment.shipping_fee.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {shipment?.delivery_days && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Delivery Days
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {shipment.delivery_days} days
+                    </span>
+                  </div>
+                )}
+                {shipment?.created_at && (
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <span className="text-sm text-muted-foreground">Shipped On</span>
+                    <span className="text-sm font-medium text-foreground">
+                      {new Date(shipment.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 )}
@@ -437,6 +629,45 @@ const TrackingPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="max-w-4xl max-h-[90vh] relative">
+            <img
+              src={selectedImage}
+              alt="Package"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            />
+            <button
+              className="absolute top-4 right-4 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+              onClick={() => setSelectedImage(null)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        @keyframes truck-move {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(calc(100vw + 100%)); }
+        }
+        .animate-truck-move {
+          animation: truck-move 15s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };
