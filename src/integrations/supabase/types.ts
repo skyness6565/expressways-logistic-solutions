@@ -100,16 +100,25 @@ export type Database = {
       shipments: {
         Row: {
           created_at: string
+          currency: string | null
           current_location: string | null
+          delivery_days: number | null
           destination_location: string
           estimated_delivery: string | null
           id: string
           origin_location: string
+          package_description: string | null
+          package_value: number | null
+          recipient_address: string | null
+          recipient_country: string | null
           recipient_email: string | null
           recipient_name: string | null
+          sender_address: string | null
+          sender_country: string | null
           sender_email: string | null
           sender_name: string | null
           service_type: string
+          shipping_fee: number | null
           status: string
           tracking_number: string
           updated_at: string
@@ -117,16 +126,25 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          currency?: string | null
           current_location?: string | null
+          delivery_days?: number | null
           destination_location: string
           estimated_delivery?: string | null
           id?: string
           origin_location: string
+          package_description?: string | null
+          package_value?: number | null
+          recipient_address?: string | null
+          recipient_country?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
+          sender_address?: string | null
+          sender_country?: string | null
           sender_email?: string | null
           sender_name?: string | null
           service_type?: string
+          shipping_fee?: number | null
           status?: string
           tracking_number: string
           updated_at?: string
@@ -134,16 +152,25 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          currency?: string | null
           current_location?: string | null
+          delivery_days?: number | null
           destination_location?: string
           estimated_delivery?: string | null
           id?: string
           origin_location?: string
+          package_description?: string | null
+          package_value?: number | null
+          recipient_address?: string | null
+          recipient_country?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
+          sender_address?: string | null
+          sender_country?: string | null
           sender_email?: string | null
           sender_name?: string | null
           service_type?: string
+          shipping_fee?: number | null
           status?: string
           tracking_number?: string
           updated_at?: string
