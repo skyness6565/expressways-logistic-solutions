@@ -91,10 +91,6 @@ const Navbar = ({ onTrackClick, onQuoteClick }: NavbarProps) => {
               <Package className="w-4 h-4" />
               Track
             </Button>
-            <Button variant="hero" size="lg" onClick={onQuoteClick}>
-              <FileText className="w-4 h-4" />
-              Get a Quote
-            </Button>
           </div>
 
           {/* Mobile Menu Button */}
