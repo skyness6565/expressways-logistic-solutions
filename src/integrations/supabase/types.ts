@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      quote_requests: {
+        Row: {
+          company: string | null
+          created_at: string
+          destination: string | null
+          details: string | null
+          email: string
+          id: string
+          name: string
+          origin: string | null
+          phone: string | null
+          service_type: string
+          status: string
+          weight_kg: number | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          destination?: string | null
+          details?: string | null
+          email: string
+          id?: string
+          name: string
+          origin?: string | null
+          phone?: string | null
+          service_type: string
+          status?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          destination?: string | null
+          details?: string | null
+          email?: string
+          id?: string
+          name?: string
+          origin?: string | null
+          phone?: string | null
+          service_type?: string
+          status?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      shipment_events: {
+        Row: {
+          completed: boolean
+          created_at: string
+          event_date: string
+          id: string
+          location: string
+          shipment_id: string
+          title: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          event_date?: string
+          id?: string
+          location: string
+          shipment_id: string
+          title: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          event_date?: string
+          id?: string
+          location?: string
+          shipment_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_events_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipments: {
+        Row: {
+          created_at: string
+          current_location: string | null
+          destination_location: string
+          estimated_delivery: string | null
+          id: string
+          origin_location: string
+          recipient_email: string | null
+          recipient_name: string | null
+          sender_email: string | null
+          sender_name: string | null
+          service_type: string
+          status: string
+          tracking_number: string
+          updated_at: string
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string
+          current_location?: string | null
+          destination_location: string
+          estimated_delivery?: string | null
+          id?: string
+          origin_location: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          service_type?: string
+          status?: string
+          tracking_number: string
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string
+          current_location?: string | null
+          destination_location?: string
+          estimated_delivery?: string | null
+          id?: string
+          origin_location?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          service_type?: string
+          status?: string
+          tracking_number?: string
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
